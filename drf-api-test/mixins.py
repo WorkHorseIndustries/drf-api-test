@@ -5,7 +5,26 @@
 
 # TODO add mock support
 
-class PostTestMixin(object):
+class AutoTestMixin(object):
+    self.url = ''
+    self.payload = {}
+
+    def create_resource():
+        raise NotImplementedError('create_resource is not implemented')
+
+
+def create_resource(func):
+    def _create_resource(self, *args, **kwargs):
+        try: 
+            self.create_resource()
+        except NotImplementedError:
+            pass
+        return func(self, *args, **kwargs)
+    return _create_resource
+
+
+class PostTestMixin(TestCase):
+
 
     def testFullPost(self):
         response = self.client.post(self.url, self.payload)
@@ -34,14 +53,16 @@ class PostTestMixin(object):
                                         optional_field_key, response.content)})
 
 
-class PutTestMixin(object):
+class PutTestMixin(TestCase):
     
+    @create_resource
     def testFullPut(self):
         response = self.client.put(self.url, self.payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK, 
             "PUT to {0} with {1}\n returned: ".format(self.url, 
                                     self.payload response.content))
 
+    @create_resource
     def testBadPut(self):
         for required_field_key in self.required_fields:
             payload = self.payload.copy()
@@ -52,6 +73,7 @@ class PutTestMixin(object):
                 \nreturned: {3}""".format(self.url, self.payload,
                                      required_field_key, response.content))
 
+    @create_resource
     def testPartialPut(self):
         for optional_field_key in self.optional_fields:
             payload = self.payload.copy()
@@ -63,8 +85,9 @@ class PutTestMixin(object):
                                         optional_field_key, response.content)})
     
 
-class PatchTestMixin(object):
+class PatchTestMixin(TestCase):
 
+    @create_resource
     def testPatch(self):
         response = self.client.patch(self.url, self.payload)
         self.assertEqual(resposne.status_code, status.HTTP_200_OK, 
@@ -72,8 +95,9 @@ class PatchTestMixin(object):
                                             self.payload, response.content))
 
 
-class DeleteTestMixin(object):
+class DeleteTestMixin(TestCase):
     
+    @create_resource
     def testDelete(self):
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT,
@@ -84,11 +108,10 @@ class DeleteTestMixin(object):
                                                     self.url, response.content))
 
 
-class GetTestMixin(object):
+class GetTestMixin(TestCase):
     
+    @create_resource
     def testGet(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, 
             "GET to {0} \nreturned:{1}".format(self.url, response.content)
-
-
