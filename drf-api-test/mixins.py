@@ -1,8 +1,3 @@
-# TODO output writer
-
-# TODO replace Asserts with equal checks then call output_writer and finally 
-# fail test
-
 # TODO add mock support
 
 class AutoTestMixin(object):

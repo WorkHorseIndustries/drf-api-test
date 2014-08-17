@@ -6,9 +6,11 @@ from rest_framework import status
 from .mixins import PostMixin, PutMixin, PatchMixin, DeleteMixin, GetMixin
 
 
-class InvalidClientError(Exception):
-    pass
-
+def create_resource_func(url, payload):
+    response = self.client.post(self.url, self.payload)
+    self.assertEqual(response.status_code, status.HTTP_201_CREATED,
+            "Resource create POST to {0} with {1}\n returned:".format(self.url, 
+                                                self.payload response.content))
 
 class MetaAPITest(type):
     def __new__(cls, name, bases, attrs):
@@ -21,30 +23,24 @@ class MetaAPITest(type):
         }
         client = APIClient()
         class_mixins = []
-        for ep in attrs.get('endpoints', []):
-            mixins = [method_mixins[method] for method in client.options(endpoint)]
-            class_mixins.append(mixins)
+        ep = attrs.get('endpoints', '')
+        mixins = [method_mixins[method] for method in client.options(ep)]
+        class_mixins.append(mixins)
         bases = bases + tuple(set(class_mixins))
+
+        if PostMixin in mixins and not 'create_resource' in attrs:
+            attrs['create_resource'] = create_resource_func
+
         return super(MetaAPITest, cls).__new__(cls, name, bases, attrs)
 
 
 class APITest(TestCase):
     __metaclass__ = MetaAPITest 
-
-    endpoints = []
+    endpoints = ''
     client = APIClient()
     payload = {}
     required_fields = []
     optional_fields = []
-    # TODO: look up if you can get the name of the reverse from the url
-    def __init__(self, endpoints, client=None, payload={}, 
-        required_fields=[], optional_fields=[]):
-        
-        if not client:
-            client = APIClient()
-        elif client is not APIClient:
-            raise InvalidClientError("""client is not an instance of \
-                                        rest_framework.test.APIClient""")
 
     
 
