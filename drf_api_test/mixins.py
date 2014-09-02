@@ -8,13 +8,13 @@ class AutoTestMixin(object):
         raise NotImplementedError('create_resource is not implemented')
 
 
-def create_resource(func):
+def create_resource(fn):
     def _create_resource(self, *args, **kwargs):
         try: 
             self.create_resource()
         except NotImplementedError:
             pass
-        return func(self, *args, **kwargs)
+        return fn(self, *args, **kwargs)
     return _create_resource
 
 
@@ -24,8 +24,8 @@ class PostTestMixin(TestCase):
     def testFullPost(self):
         response = self.client.post(self.url, self.payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
-            "POST to {0} with {1}\n returned: ".format(self.url, 
-                                    self.payload response.content))
+            "POST to {0} with {1}\n returned: {2}".format(self.url, 
+                                    self.payload, response.content))
 
     def testBadPost(self):
         for required_field_key in self.required_fields:
@@ -54,8 +54,8 @@ class PutTestMixin(TestCase):
     def testFullPut(self):
         response = self.client.put(self.url, self.payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK, 
-            "PUT to {0} with {1}\n returned: ".format(self.url, 
-                                    self.payload response.content))
+            "PUT to {0} with {1}\n returned: {2}".format(self.url, 
+                                    self.payload, response.content))
 
     @create_resource
     def testBadPut(self):
@@ -86,7 +86,7 @@ class PatchTestMixin(TestCase):
     def testPatch(self):
         response = self.client.patch(self.url, self.payload)
         self.assertEqual(resposne.status_code, status.HTTP_200_OK, 
-            "PATCH to {0} with {1} \nreturned:{3}".format(self.url, 
+            "PATCH to {0} with {1} \nreturned: {2}".format(self.url, 
                                             self.payload, response.content))
 
 
@@ -99,7 +99,7 @@ class DeleteTestMixin(TestCase):
             "DELETE to {0}"format(self.url))
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
-            "After initial DELETE second DELETE to {0} \nreturned: ".format(
+            "After initial DELETE second DELETE to {0} \nreturned: {1}".format(
                                                     self.url, response.content))
 
 

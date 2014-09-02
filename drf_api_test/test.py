@@ -1,7 +1,6 @@
-from django.test import TestCase
 from django.core.urlresolvers import reverse
 
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from .mixins import PostMixin, PutMixin, PatchMixin, DeleteMixin, GetMixin
 
@@ -21,9 +20,10 @@ class MetaAPITest(type):
             'DELETE': DeleteMixin,
             'GET': GetMixin
         }
-        client = APIClient()
         class_mixins = []
         ep = attrs.get('endpoints', '')
+        client = APIClient()
+        print client.options(ep)
         mixins = [method_mixins[method] for method in client.options(ep)]
         class_mixins.append(mixins)
         bases = bases + tuple(set(class_mixins))
@@ -34,14 +34,12 @@ class MetaAPITest(type):
         return super(MetaAPITest, cls).__new__(cls, name, bases, attrs)
 
 
-class APITest(TestCase):
+class APITest(APITestCase):
     __metaclass__ = MetaAPITest 
-    endpoints = ''
-    client = APIClient()
+    url = ''
     payload = {}
     required_fields = []
     optional_fields = []
-
     
 
     

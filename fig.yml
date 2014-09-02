@@ -1,0 +1,7 @@
+web:
+    build: .
+    command: python test_app/manage.py runserver 
+    volumes:
+        - .:/code
+    ports:
+        - "8080:8080"
