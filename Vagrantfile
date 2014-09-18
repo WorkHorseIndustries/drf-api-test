@@ -41,7 +41,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   ##### NETWORKING SETTINGS ################
   #https://docs.vagrantup.com/v2/networking/
 
-  config.vm.network "forwarded_port", guest: 8080, host: 8080
+  config.vm.network "forwarded_port", guest: 8080, host: 5000
   config.vm.network "private_network", ip: "192.168.50.4"
 
   #want a different shell when you ssh into vagrant? You can use this command.

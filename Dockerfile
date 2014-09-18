@@ -6,7 +6,7 @@ ADD . /code/
 
 WORKDIR /code/
 RUN pip install -r requirements.txt
+RUN python setup.py install
+RUN python setup.py develop 
+WORKDIR /code/test/testproj
 
-WORKDIR /code/drf-api-test
-
-EXPOSE 8080

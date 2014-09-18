@@ -1,6 +1,6 @@
 web:
     build: .
-    command: python test_app/manage.py runserver 
+    command: python manage.py test 
     volumes:
         - .:/code
     ports:
