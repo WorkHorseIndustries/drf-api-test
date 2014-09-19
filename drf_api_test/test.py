@@ -9,21 +9,24 @@ from rest_framework import status
 # such as expected status_codes and payload comparitors. 
 
 
-def _error_message(actual_status, expected_status, method, uri, payload, response_content, details=''):
-    msg = '{0} is not expected {1}\n'
-    msg += "{0}: {1}\n".format(method, uri)
-    msg += "payload: {2}\nresponse content: {3}\n"
-    if details:
-        msg += "details: " + details
-    return msg.format(actual_status, expected_status, payload, response_content)
+class ErrorReporter(object):
+
+    def error_message(self, actual_status, expected_status, method,
+            uri, payload, response_content, details=''):
+        msg = '{0} is not expected {1}\n'
+        msg += "{0}: {1}\n".format(method, uri)
+        msg += "payload: {2}\nresponse content: {3}\n"
+        if details:
+            msg += "details: " + details
+        return msg.format(actual_status, expected_status, payload, response_content)
 
 
-class PostTestMixin(APITestCase):
+class PostTestMixin(ErrorReporter, APITestCase):
 
     def testFullPost(self):
         response = self.client.post(self.uri, self.payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
-                _error_message(response.status_code, status.HTTP_201_CREATED, "POST", self.uri,
+                self.error_message(response.status_code, status.HTTP_201_CREATED, "POST", self.uri,
                     self.payload, response.content))
 
     def testBadPost(self):
@@ -32,7 +35,7 @@ class PostTestMixin(APITestCase):
             payload.pop(required_field_key)
             response = self.client.post(self.uri, payload)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                   _error_message(response.status_code, status.HTTP_400_BAD_REQUEST,
+                   self.error_message(response.status_code, status.HTTP_400_BAD_REQUEST,
                         "POST", self.uri, payload, response.content,
                         "Intentionally ommited required field {0}".format(required_field_key)))
 
@@ -42,16 +45,16 @@ class PostTestMixin(APITestCase):
             payload.pop(optional_field_key, None)
             response = self.client.post(self.uri, payload)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED,
-                 _error_message(response.status_code, status.HTTP_201_CREATED, "POST", self.uri, payload,
+                 self.error_message(response.status_code, status.HTTP_201_CREATED, "POST", self.uri, payload,
                      response.content, "intentionall omitted optional field {}".format(optional_field_key)))
 
 
-class PutTestMixin(APITestCase):
+class PutTestMixin(ErrorReporter, APITestCase):
 
     def testFullPut(self):
         response = self.client.put(self.uri, self.payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
-            _error_message(response.status_code, status.HTTP_200_OK,
+            self.error_message(response.status_code, status.HTTP_200_OK,
                 "PUT", self.uri, self.payload, response.content))
 
 
@@ -61,7 +64,7 @@ class PutTestMixin(APITestCase):
             payload.pop(required_field_key)
             response = self.client.put(self.uri, payload)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                 _error_message(response.status_code, status.HTTP_400_BAD_REQUEST,
+                 self.error_message(response.status_code, status.HTTP_400_BAD_REQUEST,
                         "PUT", self.uri, payload, response.content,
                         "Intentionally ommited required field {0}".format(required_field_key)))
 
@@ -71,13 +74,13 @@ class PutTestMixin(APITestCase):
             payload.pop(optional_field_key, None)
             response = self.client.put(self.uri, payload)
             self.assertEqual(response.status_code, status.HTTP_200_OK,
-               _error_message(response.status_code, status.HTTP_200_OK, "PUT", self.uri, payload,
+               self.error_message(response.status_code, status.HTTP_200_OK, "PUT", self.uri, payload,
                      response.content, "intentionall omitted optional field {}".format(optional_field_key)))
 
 
 
 
-class PatchTestMixin(APITestCase):
+class PatchTestMixin(ErrorReporter, APITestCase):
 
     def testPatch(self):
         response = self.client.patch(self.uri, self.payload)
@@ -86,26 +89,26 @@ class PatchTestMixin(APITestCase):
                     self.payload, response.content))
 
 
-class DeleteTestMixin(APITestCase):
+class DeleteTestMixin(ErrorReporter, APITestCase):
 
     def testDelete(self):
         response = self.client.delete(self.uri)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT,
-            _error_message(response.status_code, status.HTTP_204_NO_CONTENT,
+            self.error_message(response.status_code, status.HTTP_204_NO_CONTENT,
                 "DELETE", self.uri, "", response.content))
 
         response = self.client.delete(self.uri)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
-            _error_message(response.status_code, status.HTTP_404_NOT_FOUND,
+            self.error_message(response.status_code, status.HTTP_404_NOT_FOUND,
                 "DELETE", self.uri, "", response.content,
                 "Second DELETE resource should have been deleted"))
 
-class GetTestMixin(APITestCase):
+class GetTestMixin(ErrorReporter, APITestCase):
 
     def testGet(self):
         response = self.client.get(self.uri)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
-            _error_message(response.status_code, status.HTTP_200_OK, "GET",
+            self.error_message(response.status_code, status.HTTP_200_OK, "GET",
                 self.uri, "", response.content))
 
 class HttpOptionsFormatError(Exception):
