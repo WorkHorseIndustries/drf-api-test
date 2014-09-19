@@ -58,10 +58,10 @@ class PutTestMixin(APITestCase):
     def testPartialPut(self):
         for optional_field_key in self.optional_fields:
             payload = self.payload.copy()
-            payload.pop(optional_field_key)
+            payload.pop(optional_field_key, None)
             response = self.client.put(self.uri, payload)
             self.assertEqual(response.status_code, status.HTTP_200_OK,
-                """PUT to {0} with {1] where optional field: {1} is omitted\
+                """PUT to {0} with {1} where optional field: {1} is omitted\
                \nreturn: {3}""".format(self.uri, self.payload,
                                         optional_field_key, response.content))
 
@@ -70,7 +70,7 @@ class PatchTestMixin(APITestCase):
 
     def testPatch(self):
         response = self.client.patch(self.uri, self.payload)
-        self.assertEqual(resposne.status_code, status.HTTP_200_OK,
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
             "PATCH to {0} with {1} \nreturned: {2}".format(self.uri,
                                             self.payload, response.content))
 
@@ -99,56 +99,59 @@ class HttpOptionsFormatError(Exception):
     pass
 
 
-class MetaAPIRESTTest(type):
+class MetaRESTTest(type):
 
     def __new__(cls, name, bases, attrs):
         class_mixins = []
         uri = attrs.get('uri', None)
-        print attrs
-        if not uri:
-            raise NotImplementedError("you must include a uri for an endpoint to test")
+        if uri:
+            client = APIClient()
+            options_metadata = json.load(StringIO.StringIO(client.options(uri).content))
 
-        client = APIClient()
-        option_metadata = json.load(StringIO(client.options(uri)))
+            if not options_metadata.get('allowed_methods'):
+                raise HttpOptionsFormatError(
+                """options didn't return a list of 'allowed_methods' http methods. Consider overriding \
+                    the metadata method on this view \
+                    http://www.django-rest-framework.org/topics/documenting-your-api .\
+                    add 'allowed' to the returned dict which should contain a list of all HTTP \
+                    supported by this endpoint.""")
 
-        if not options_metadata.get('allowed_methods'):
-            raise HttpOptionsFormatError(
-            """options didn't return a list of 'allowed_methods' http methods. Consider overriding \
-                the metadata method on this view \
-                http://www.django-rest-framework.org/topics/documenting-your-api .\
-                add 'allowed' to the returned dict which should contain a list of all HTTP \
-                supported by this endpoint.""")
+            method_mixins = attrs.pop('method_mixins', None)
 
-        mixins = [method_mixin[method] for method
-                in options_metadata['allowed'] if method in attrs.pop('method_mixins', {})]
+            if not method_mixins:
+                for base in bases:
+                    try:
+                        method_mixins = base.method_mixins
+                    except:
+                        pass
 
-        class_mixins.append(mixins)
+            class_mixins += ([method_mixins[method] for method
+                    in options_metadata['allowed_methods'] if method in method_mixins])
 
-        if 'actions' in options_metatadata:
-            fields_data = options_metadata['actions'].get(
-                                    'POST', options_metatadata['actions'].get('PUT'))
-            if field_data is None:
-                raise HttOptionsFormatError("actions included in resposne but didn't \
-                    contain either POST or PUT action metadata")
+            if 'actions' in options_metadata:
+                fields_data = options_metadata['actions'].get(
+                                        'POST', options_metadata['actions'].get('PUT'))
+                if fields_data is None:
+                    raise HttOptionsFormatError("actions included in resposne but didn't \
+                        contain either POST or PUT action metadata")
 
-            for k,v  in fields_data.iteritems():
-                if v['required']:
-                    field_list = 'required_fields'
-                else:
-                    field_list = 'optional_fields'
-                attrs[field_list] = attrs[fields_list].append(k)
+                attrs['required_fields'] = []
+                attrs['optional_fields'] = []
+                for k,v  in fields_data.iteritems():
+                    if v['required']:
+                        field_list = 'required_fields'
+                    else:
+                        field_list = 'optional_fields'
+                    attrs[field_list].append(k)
+            bases += tuple(class_mixins)
+        return super(MetaRESTTest, cls).__new__(cls, name, bases, attrs)
 
-        bases = bases + tuple(set(class_mixins))
 
-        return super(MetaAPITest, cls).__new__(cls, name, bases, attrs)
-
-
-class APIRESTTest(APITestCase):
-    __metaclass__ = MetaAPIRESTTest
-    # uri = None
-    # payload = None
-    # required_fields = []
-    # optional_fields = []
+class RESTTestCase(APITestCase):
+    __metaclass__ = MetaRESTTest
+    uri = None
+    required_fields = []
+    optional_fields = []
     method_mixins = {
         'POST': PostTestMixin,
         'PUT': PutTestMixin,
