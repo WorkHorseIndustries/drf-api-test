@@ -1,5 +1,0 @@
-setup.py
-drf_api_test.egg-info/PKG-INFO
-drf_api_test.egg-info/SOURCES.txt
-drf_api_test.egg-info/dependency_links.txt
-drf_api_test.egg-info/top_level.txt
