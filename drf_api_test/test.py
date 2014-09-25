@@ -144,8 +144,6 @@ class MetaRESTTest(type):
             class_mixins += ([method_mixins[method] for method
                     in options_metadata['allowed_methods'] if method in method_mixins])
 
-            print name
-            print options_metadata['allowed_methods']
             if 'actions' in options_metadata:
                 fields_data = options_metadata['actions'].get(
                                         'POST', options_metadata['actions'].get('PUT'))
