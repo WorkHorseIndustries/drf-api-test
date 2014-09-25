@@ -39,7 +39,7 @@ class GETPOSTEndpoint(generics.GenericAPIView):
         pass
 
     def metadata(self, request):
-        data = super(Endpoint, self).metadata(request)
+        data = super(GETPOSTEndpoint, self).metadata(request)
         data['allowed_methods'] = ['GET', 'POST']
         return data
 ```
