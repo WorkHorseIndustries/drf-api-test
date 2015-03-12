@@ -1,3 +1,3 @@
 Contibutors
 ===========
-VOKAL Interactive
+Vokal
