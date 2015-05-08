@@ -24,22 +24,18 @@ When a TestCase inherits from RESTTestCase You must provide a uri which will be 
 
 
 ####Notes
-Django REST framework does not by default provide the allowed_methods for an endpoint. To retreive this from an endpoint consider overriding the metadata method.  
+Django REST framework does not by default provide the allowed_methods for an endpoint. To retreive this from an endpoint consider overriding the metadata method or implementing the `drf_api_test.mixins.OptionsAllowedMixin`  
 
 ```python
 
 from rest_framework import generics
+from drf_api_test import OptionsAllowMethodMixin
 
-class GETPOSTEndpoint(generics.GenericAPIView):
+class GETPOSTEndpoint(OptionsAllowMethodsMixin, generics.GenericAPIView):
     
     def get(self, request):
         pass
     
     def post(self, request):
         pass
-
-    def metadata(self, request):
-        data = super(GETPOSTEndpoint, self).metadata(request)
-        data['allowed_methods'] = ['GET', 'POST']
-        return data
 ```

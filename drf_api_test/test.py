@@ -85,7 +85,7 @@ class PatchTestMixin(ErrorReporter, APITestCase):
     def testPatch(self):
         response = self.client.patch(self.uri, self.payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
-             _error_message(response.status_code, status.HTTP_200_OK, "PATCH", self.uri,
+             self.error_message(response.status_code, status.HTTP_200_OK, "PATCH", self.uri,
                     self.payload, response.content))
 
 
