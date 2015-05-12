@@ -4,7 +4,9 @@ from django.core.urlresolvers import reverse
 
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
+import rest_framework
 
+from mock import patch 
 # TODO mixins should be class generators so we can add dynamic data to them
 # such as expected status_codes and payload comparitors. 
 
@@ -122,7 +124,8 @@ class MetaRESTTest(type):
         uri = attrs.get('uri', None)
         if uri:
             client = APIClient()
-            options_metadata = json.load(StringIO.StringIO(client.options(uri).content))
+            with patch.object(rest_framework.views.APIView, 'check_permissions') as mock:
+                    options_metadata = json.load(StringIO.StringIO(client.options(uri).content))
 
             if not options_metadata.get('allowed_methods'):
                 raise HttpOptionsFormatError(
